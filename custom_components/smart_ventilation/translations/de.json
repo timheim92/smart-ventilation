@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Smart Ventilation einrichten",
+        "description": "Lege eine Instanz für deine Lüftungsempfehlungen an.",
+        "data": {
+          "name": "Name der Instanz"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Smart Ventilation Optionen",
+        "data": {}
+      }
+    }
+  }
+}
