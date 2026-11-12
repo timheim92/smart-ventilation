@@ -1,12 +1,10 @@
 {
   "domain": "smart_ventilation",
   "name": "Smart Ventilation",
-  "codeowners": [
-    "@timheim92"
-  ],
+  "codeowners": ["@timheim92"],
   "config_flow": true,
   "documentation": "https://github.com/timheim92/smart-ventilation",
-  "iot_class": "local_push",
+  "iot_class": "local_polling",
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
