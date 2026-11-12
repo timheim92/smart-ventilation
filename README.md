@@ -1,46 +1,40 @@
 # Smart Ventilation
 
-A modular Home Assistant integration for intelligent, room-based ventilation recommendations.
+A modular Home Assistant custom integration for room-level ventilation recommendations.
 
-The integration is designed for different sensor configurations and interchangeable weather-data providers. Missing or outdated measurements remain unknown and are never replaced with invented values.
+## Current development version: 0.2.0 beta foundation
 
-## Current status: early development
+This project is in active development. The current code provides multi-room sensor mapping, basic room/window metadata, sensor freshness checks, psychrometric calculations and conservative, explainable recommendations.
 
-The first data-foundation iteration provides:
+### Included
 
-- A Home Assistant configuration flow and options page for selecting indoor/outdoor entities.
-- Optional indoor CO2 and weather entity selection.
-- A normalized measurement model with source, unit, timestamp, availability, and stale-data metadata.
-- Validation of numeric readings, including rejection of non-numeric and non-finite states.
-- A 30-minute initial freshness limit for numeric sensor entities.
-- A current-weather adapter that preserves supported attributes when supplied by the selected Home Assistant weather entity.
-- Status and measurement entities for diagnostics.
+- Multiple rooms with independent temperature, humidity and optional CO2 sensors.
+- Shared outdoor temperature/humidity and a current Home Assistant weather entity.
+- Room floor area, ceiling height, calculated room volume, window area, orientation, window type, opening mode and shading metadata.
+- Numeric validation, stale-data detection and Celsius normalization.
+- Absolute humidity and dew point calculations.
+- Room-level recommendation state, rationale, estimated duration, confidence, dew point and humidity entities.
+- Binary sensor for current ventilation demand.
+- Safety documentation and GitHub Actions checks.
 
-This version does **not** yet calculate ventilation recommendations, ingest weather forecasts, normalize all units, or control windows.
+### Important limitations
 
-## Configuration
+This is not yet a complete first release and must not control windows. The current recommendation algorithm is heuristic and does not calculate a certified air-change rate. Weather forecast ingestion, solar/pollen/outdoor air-quality forecasts, alternative provider adapters, actuator support and full Home Assistant integration tests are still outstanding. See [the beta scope](docs/V0.2_BETA_SCOPE.md) and [safety notes](docs/SAFETY_AND_LIMITATIONS.md).
 
-Add **Smart Ventilation** through Settings → Devices & services. Then open the integration's options to select the entities available in your installation. Leave optional or unavailable sensors empty.
+## Setup
 
-## Planned capabilities
+Install the repository as a custom integration only in a test Home Assistant instance after reviewing the beta scope. Copy `custom_components/smart_ventilation` into the Home Assistant `custom_components` directory, restart Home Assistant, then add Smart Ventilation under Settings → Devices & services.
 
-- Room-specific ventilation recommendations and explanations.
-- Absolute humidity, dew point, CO2 and air-quality analysis.
-- Forecast-aware seasonal logic, wind, precipitation, solar load and pollen/air-quality inputs where available.
-- Replaceable provider adapters for different weather services.
-- Optional motorized window control, disabled by default, confirmation-first and safety-checked.
+After adding the integration, open its options to add rooms and select the available entities. Configure outdoor temperature, outdoor humidity and a current weather entity under global sources. Leave optional sensors unset when unavailable.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DATA_MODEL.md](docs/DATA_MODEL.md).
+## Development
 
-## Design principles
+Run:
 
-- No fabricated sensor values.
-- Sensor and weather sources are replaceable.
-- Core calculations are independent of sensor brands.
-- Missing and stale data are visible to the user.
-- Window actuation remains optional and safety-first.
+```bash
+python -m compileall -q custom_components
+pytest -q
+ruff check custom_components tests
+```
 
-
-## Multi-room support
-
-The integration now supports an arbitrary number of independently configured rooms. Use the integration options to add or remove rooms and assign each room its own temperature, humidity, and optional CO2 entity. Outdoor temperature, outdoor humidity, and current weather remain shared global inputs. See [docs/ROOMS.md](docs/ROOMS.md).
+See [docs/ROOMS.md](docs/ROOMS.md), [docs/DATA_MODEL.md](docs/DATA_MODEL.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/V0.2_BETA_SCOPE.md](docs/V0.2_BETA_SCOPE.md).
