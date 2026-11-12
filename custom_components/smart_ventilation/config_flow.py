@@ -34,7 +34,7 @@ class SmartVentilationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return SmartVentilationOptionsFlow(config_entry)
 
 class SmartVentilationOptionsFlow(config_entries.OptionsFlow):
-    """Manage global sources and an arbitrary number of rooms."""
+    """Manage rooms and global weather data."""
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self.config_entry = config_entry
 
@@ -53,10 +53,18 @@ class SmartVentilationOptionsFlow(config_entries.OptionsFlow):
             room_id = re.sub(r"[^a-z0-9_]+", "_", name.casefold()).strip("_") or uuid.uuid4().hex[:8]
             if any(room.get("room_id") == room_id for room in rooms):
                 room_id = f"{room_id}_{uuid.uuid4().hex[:4]}"
-            rooms.append({"room_id": room_id, "name": name,
-                          "temperature": user_input.get("temperature"),
-                          "humidity": user_input.get("humidity"),
-                          "co2": user_input.get("co2")})
+            rooms.append({
+                "room_id": room_id, "name": name,
+                "temperature": user_input.get("temperature"),
+                "humidity": user_input.get("humidity"), "co2": user_input.get("co2"),
+                "area_m2": user_input.get("area_m2"),
+                "ceiling_height_m": user_input.get("ceiling_height_m"),
+                "window_area_m2": user_input.get("window_area_m2"),
+                "orientation": user_input.get("orientation"),
+                "window_type": user_input.get("window_type"),
+                "opening_type": user_input.get("opening_type"),
+                "shading": user_input.get("shading"),
+            })
             return self.async_create_entry(title="", data={**self.config_entry.options, "rooms": rooms})
         return self.async_show_form(step_id="add_room", data_schema=self._room_schema())
 
@@ -66,6 +74,13 @@ class SmartVentilationOptionsFlow(config_entries.OptionsFlow):
             vol.Optional("temperature"): _entity(),
             vol.Optional("humidity"): _entity(),
             vol.Optional("co2"): _entity(),
+            vol.Optional("area_m2"): vol.Coerce(float),
+            vol.Optional("ceiling_height_m"): vol.Coerce(float),
+            vol.Optional("window_area_m2"): vol.Coerce(float),
+            vol.Optional("orientation"): vol.In(["N","NE","E","SE","S","SW","W","NW"]),
+            vol.Optional("window_type"): vol.In(["tilt_turn","tilt","sliding","fixed","other"]),
+            vol.Optional("opening_type"): vol.In(["single","cross","tilt"]),
+            vol.Optional("shading"): vol.In(["none","partial","external","internal"]),
         })
 
     async def async_step_remove_room(self, user_input: dict | None = None):
