@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, UPDATE_INTERVAL_MINUTES
 from .data_sources.home_assistant import read_measurement
+from .data_sources.weather import read_weather
 from .models import OutdoorAirData, RoomAirData, VentilationData
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ class SmartVentilationCoordinator(DataUpdateCoordinator[dict]):
                          update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES))
 
     async def _async_update_data(self) -> dict:
+        """Collect configured measurements without fabricating missing data."""
         options = self.entry.options
         indoor = RoomAirData(
             read_measurement(self.hass, options.get("indoor_temperature"), "°C"),
@@ -25,6 +27,7 @@ class SmartVentilationCoordinator(DataUpdateCoordinator[dict]):
         outdoor = OutdoorAirData(
             read_measurement(self.hass, options.get("outdoor_temperature"), "°C"),
             read_measurement(self.hass, options.get("outdoor_humidity"), "%"))
+        weather = read_weather(self.hass, options.get("weather_entity"))
         snapshot = VentilationData(indoor, outdoor, options.get("weather_entity"),
                                    datetime.now(timezone.utc))
         measurements = {
@@ -34,7 +37,7 @@ class SmartVentilationCoordinator(DataUpdateCoordinator[dict]):
         configured = sum(bool(options.get(key)) for key in (
             "indoor_temperature", "indoor_humidity", "indoor_co2",
             "outdoor_temperature", "outdoor_humidity"))
-        return {"snapshot": snapshot, "measurements": measurements,
+        return {"snapshot": snapshot, "measurements": measurements, "weather": weather,
                 "available_count": sum(m.available for m in measurements.values()),
                 "configured_count": configured,
                 "stale_count": sum(m.stale for m in measurements.values()),
