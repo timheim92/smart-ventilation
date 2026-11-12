@@ -13,8 +13,44 @@
   "options": {
     "step": {
       "init": {
-        "title": "Smart Ventilation Optionen",
-        "data": {}
+        "title": "Räume und Datenquellen verwalten",
+        "description": "Füge beliebig viele Räume hinzu und ordne jedem Raum eigene Sensoren zu.",
+        "menu_options": {
+          "add_room": "Raum hinzufügen",
+          "remove_room": "Raum entfernen",
+          "global_sources": "Außensensoren und Wetterquelle"
+        }
+      },
+      "add_room": {
+        "title": "Raum hinzufügen",
+        "description": "Sensoren sind optional. Nicht vorhandene Messwerte bleiben unbekannt.",
+        "data": {
+          "name": "Raumname",
+          "temperature": "Temperatursensor",
+          "humidity": "Luftfeuchtigkeitssensor",
+          "co2": "CO₂-Sensor"
+        }
+      },
+      "remove_room": {
+        "title": "Raum entfernen",
+        "data": {
+          "room_id": "Zu entfernender Raum"
+        }
+      },
+      "global_sources": {
+        "title": "Globale Datenquellen",
+        "description": "Diese Außendaten werden von allen Räumen gemeinsam verwendet.",
+        "data": {
+          "outdoor_temperature": "Außentemperatur",
+          "outdoor_humidity": "Außenluftfeuchtigkeit",
+          "weather_entity": "Wetter-Entität"
+        }
+      }
+    },
+    "abort": {
+      "no_rooms": {
+        "title": "Keine Räume vorhanden",
+        "description": "Es wurde noch kein Raum angelegt."
       }
     }
   }
