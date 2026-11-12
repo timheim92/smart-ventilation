@@ -26,6 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry,
         for key, label, unit, icon in ROOM_FIELDS:
             entities.append(RoomMeasurementSensor(coordinator, entry, room["room_id"],
                                                   room["name"], key, label, unit, icon))
+        entities.extend([
+            RoomRecommendationSensor(coordinator, entry, room["room_id"], room["name"], "state", "Lüftungsempfehlung"),
+            RoomRecommendationSensor(coordinator, entry, room["room_id"], room["name"], "duration", "Lüftungsdauer", "min"),
+            RoomRecommendationSensor(coordinator, entry, room["room_id"], room["name"], "absolute_humidity_indoor", "Absolute Innenluftfeuchtigkeit", "g/m³"),
+            RoomRecommendationSensor(coordinator, entry, room["room_id"], room["name"], "absolute_humidity_outdoor", "Absolute Außenluftfeuchtigkeit", "g/m³"),
+            RoomRecommendationSensor(coordinator, entry, room["room_id"], room["name"], "dew_point", "Taupunkt", "°C"),
+        ])
     for key, label, unit in OUTDOOR_FIELDS:
         entities.append(GlobalMeasurementSensor(coordinator, entry, key, label, unit))
     async_add_entities(entities)
@@ -107,3 +114,28 @@ class GlobalMeasurementSensor(_BaseSensor):
         m = self.coordinator.data["outdoor"][self.key]
         return {"source_entity": m.source_entity, "available": m.available,
                 "stale": m.stale, "reason": m.reason}
+
+
+class RoomRecommendationSensor(_BaseSensor):
+    """Expose recommendation details as separate Home Assistant entities."""
+    def __init__(self, coordinator, entry, room_id, room_name, key, label, unit=None):
+        super().__init__(coordinator, entry)
+        self.room_id, self.key = room_id, key
+        self._attr_name = f"{room_name} {label}"
+        self._attr_unique_id = f"{entry.entry_id}_{room_id}_recommendation_{key}"
+        if unit:
+            self._attr_native_unit_of_measurement = unit
+        self._attr_icon = "mdi:air-filter" if key == "state" else "mdi:chart-line"
+    def _value(self):
+        room = next((r for r in self.coordinator.data["rooms"] if r["room_id"] == self.room_id), None)
+        return room["recommendation"].get(self.key) if room else None
+    @property
+    def native_value(self):
+        value = self._value()
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return value
+        return value
+    @property
+    def extra_state_attributes(self):
+        room = next((r for r in self.coordinator.data["rooms"] if r["room_id"] == self.room_id), None)
+        return room["recommendation"] if room else {"reason": "room_removed"}
