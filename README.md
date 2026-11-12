@@ -39,3 +39,8 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DATA_MODEL.md](docs/D
 - Core calculations are independent of sensor brands.
 - Missing and stale data are visible to the user.
 - Window actuation remains optional and safety-first.
+
+
+## Multi-room support
+
+The integration now supports an arbitrary number of independently configured rooms. Use the integration options to add or remove rooms and assign each room its own temperature, humidity, and optional CO2 entity. Outdoor temperature, outdoor humidity, and current weather remain shared global inputs. See [docs/ROOMS.md](docs/ROOMS.md).
