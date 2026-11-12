@@ -4,9 +4,7 @@
       "user": {
         "title": "Smart Ventilation einrichten",
         "description": "Lege eine Instanz für deine Lüftungsempfehlungen an.",
-        "data": {
-          "name": "Name der Instanz"
-        }
+        "data": {"name": "Name der Instanz"}
       }
     }
   },
@@ -23,19 +21,24 @@
       },
       "add_room": {
         "title": "Raum hinzufügen",
-        "description": "Sensoren sind optional. Nicht vorhandene Messwerte bleiben unbekannt.",
+        "description": "Sensoren und Gebäudedaten sind optional. Nicht vorhandene Messwerte bleiben unbekannt.",
         "data": {
           "name": "Raumname",
           "temperature": "Temperatursensor",
           "humidity": "Luftfeuchtigkeitssensor",
-          "co2": "CO₂-Sensor"
+          "co2": "CO₂-Sensor",
+          "area_m2": "Raumfläche (m²)",
+          "ceiling_height_m": "Deckenhöhe (m)",
+          "window_area_m2": "Fensterfläche (m²)",
+          "orientation": "Fensterausrichtung",
+          "window_type": "Fenstertyp",
+          "opening_type": "Lüftungsmöglichkeit",
+          "shading": "Beschattung"
         }
       },
       "remove_room": {
         "title": "Raum entfernen",
-        "data": {
-          "room_id": "Zu entfernender Raum"
-        }
+        "data": {"room_id": "Zu entfernender Raum"}
       },
       "global_sources": {
         "title": "Globale Datenquellen",
