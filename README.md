@@ -2,38 +2,40 @@
 
 A modular Home Assistant integration for intelligent, room-based ventilation recommendations.
 
-The integration is designed to work with different sensor configurations and interchangeable weather-data providers. Missing or outdated measurements are treated as unknown and are never replaced with invented values.
+The integration is designed for different sensor configurations and interchangeable weather-data providers. Missing or outdated measurements remain unknown and are never replaced with invented values.
+
+## Current status: early development
+
+The first data-foundation iteration provides:
+
+- A Home Assistant configuration flow and options page for selecting indoor/outdoor entities.
+- Optional indoor CO2 and weather entity selection.
+- A normalized measurement model with source, unit, timestamp, availability, and stale-data metadata.
+- Validation of numeric readings, including rejection of non-numeric and non-finite states.
+- A 30-minute initial freshness limit for numeric sensor entities.
+- A current-weather adapter that preserves supported attributes when supplied by the selected Home Assistant weather entity.
+- Status and measurement entities for diagnostics.
+
+This version does **not** yet calculate ventilation recommendations, ingest weather forecasts, normalize all units, or control windows.
+
+## Configuration
+
+Add **Smart Ventilation** through Settings → Devices & services. Then open the integration's options to select the entities available in your installation. Leave optional or unavailable sensors empty.
 
 ## Planned capabilities
 
-- Room-specific ventilation recommendations.
-- Indoor and outdoor temperature, humidity, and (when available) CO2 and air-quality measurements.
-- Weather forecasts, wind, precipitation, solar load, and seasonal logic.
-- Recommendations for ventilation method, timing, and duration.
-- Transparent data quality and explanation of each recommendation.
-- Optional support for motorized window openers. Window control is opt-in, requires confirmation by default, and is subject to safety checks.
+- Room-specific ventilation recommendations and explanations.
+- Absolute humidity, dew point, CO2 and air-quality analysis.
+- Forecast-aware seasonal logic, wind, precipitation, solar load and pollen/air-quality inputs where available.
+- Replaceable provider adapters for different weather services.
+- Optional motorized window control, disabled by default, confirmation-first and safety-checked.
 
-## Current status
-
-**Early development – version 0.1.0 foundation.**
-
-The current code provides the initial Home Assistant integration scaffold, configuration flow, coordinator, and a status entity. It does not yet calculate ventilation recommendations or control windows.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the planned architecture.
-
-## Development
-
-The integration is installed as a custom component in:
-
-```text
-custom_components/smart_ventilation/
-```
-
-After copying the repository into the Home Assistant `custom_components` directory, restart Home Assistant and add **Smart Ventilation** through Settings → Devices & services.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/DATA_MODEL.md](docs/DATA_MODEL.md).
 
 ## Design principles
 
 - No fabricated sensor values.
 - Sensor and weather sources are replaceable.
-- Core calculations are independent of specific sensor brands.
+- Core calculations are independent of sensor brands.
+- Missing and stale data are visible to the user.
 - Window actuation remains optional and safety-first.
