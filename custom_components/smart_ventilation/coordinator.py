@@ -7,38 +7,34 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, UPDATE_INTERVAL_MINUTES
 from .data_sources.home_assistant import read_measurement
 from .data_sources.weather import read_weather
-from .models import OutdoorAirData, RoomAirData, VentilationData
+from .room_manager import collect_room_data, configured_rooms
 _LOGGER = logging.getLogger(__name__)
 
 class SmartVentilationCoordinator(DataUpdateCoordinator[dict]):
-    """Normalize configured Home Assistant entities."""
+    """Normalize global outdoor data and independently configured rooms."""
     def __init__(self, hass: HomeAssistant, entry) -> None:
         self.entry = entry
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_{entry.title}",
                          update_interval=timedelta(minutes=UPDATE_INTERVAL_MINUTES))
 
     async def _async_update_data(self) -> dict:
-        """Collect configured measurements without fabricating missing data."""
         options = self.entry.options
-        indoor = RoomAirData(
-            read_measurement(self.hass, options.get("indoor_temperature"), "°C"),
-            read_measurement(self.hass, options.get("indoor_humidity"), "%"),
-            read_measurement(self.hass, options.get("indoor_co2"), "ppm"))
-        outdoor = OutdoorAirData(
-            read_measurement(self.hass, options.get("outdoor_temperature"), "°C"),
-            read_measurement(self.hass, options.get("outdoor_humidity"), "%"))
+        outdoor_temperature = read_measurement(self.hass, options.get("outdoor_temperature"), "°C")
+        outdoor_humidity = read_measurement(self.hass, options.get("outdoor_humidity"), "%")
         weather = read_weather(self.hass, options.get("weather_entity"))
-        snapshot = VentilationData(indoor, outdoor, options.get("weather_entity"),
-                                   datetime.now(timezone.utc))
-        measurements = {
-            "indoor_temperature": indoor.temperature, "indoor_humidity": indoor.humidity,
-            "indoor_co2": indoor.co2, "outdoor_temperature": outdoor.temperature,
-            "outdoor_humidity": outdoor.humidity}
-        configured = sum(bool(options.get(key)) for key in (
-            "indoor_temperature", "indoor_humidity", "indoor_co2",
-            "outdoor_temperature", "outdoor_humidity"))
-        return {"snapshot": snapshot, "measurements": measurements, "weather": weather,
-                "available_count": sum(m.available for m in measurements.values()),
-                "configured_count": configured,
-                "stale_count": sum(m.stale for m in measurements.values()),
-                "weather_entity": snapshot.weather_entity}
+        rooms = [collect_room_data(self.hass, room) for room in configured_rooms(options)]
+        all_measurements = [outdoor_temperature, outdoor_humidity]
+        for room in rooms:
+            all_measurements.extend([room["temperature"], room["humidity"], room["co2"]])
+        configured = sum(m.source_entity is not None for m in all_measurements)
+        return {
+            "rooms": rooms,
+            "outdoor": {"temperature": outdoor_temperature, "humidity": outdoor_humidity},
+            "weather": weather,
+            "weather_entity": options.get("weather_entity"),
+            "available_count": sum(m.available for m in all_measurements),
+            "configured_count": configured,
+            "stale_count": sum(m.stale for m in all_measurements),
+            "room_count": len(rooms),
+            "collected_at": datetime.now(timezone.utc),
+        }
