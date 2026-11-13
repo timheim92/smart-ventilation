@@ -1,5 +1,5 @@
 """Tests for conservative recommendation behavior."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from custom_components.smart_ventilation.models import Measurement
 from custom_components.smart_ventilation.recommendation import recommend
@@ -92,3 +92,37 @@ def test_implausible_humidity_blocks_recommendation():
     result = recommend(room, sample_outdoor(),
                        {"available": True, "condition": "sunny", "attributes": {}})
     assert result["state"] == "insufficient_data"
+
+
+def test_hourly_rain_forecast_blocks_ventilation():
+    now = datetime(2026, 11, 13, 18, tzinfo=timezone.utc)
+    weather = {
+        "available": True, "condition": "sunny", "attributes": {},
+        "forecast_available": True,
+        "forecast": [{
+            "datetime": (now + timedelta(hours=1)).isoformat(),
+            "precipitation_probability": 85, "precipitation": 0,
+        }],
+    }
+    result = recommend(sample_room(co2=1400), sample_outdoor(), weather, now=now)
+    assert result["state"] == "caution"
+    assert result["method"] == "none"
+    assert "Stundenprognose" in result["reason"]
+
+
+def test_recommendation_exposes_night_cooling_window():
+    now = datetime(2026, 11, 13, 19, tzinfo=timezone.utc)
+    weather = {
+        "available": True, "condition": "sunny", "attributes": {},
+        "forecast_available": True,
+        "forecast": [{
+            "datetime": (now + timedelta(hours=2)).isoformat(),
+            "temperature": 8, "precipitation_probability": 5,
+            "precipitation": 0, "wind_speed": 5, "wind_gust_speed": 10,
+        }],
+    }
+    result = recommend(sample_room(co2=500, temperature=22),
+                       sample_outdoor(temperature=12, humidity=50),
+                       weather, now=now)
+    assert result["state"] == "no_action"
+    assert result["night_cooling_window"] is not None
