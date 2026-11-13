@@ -62,3 +62,33 @@ def test_cross_opening_selects_cross_ventilation():
     result = recommend(room, sample_outdoor(),
                        {"available": True, "condition": "sunny", "attributes": {}})
     assert result["method"] == "cross"
+
+
+def test_stale_indoor_measurement_blocks_recommendation():
+    room = sample_room(co2=1400)
+    room["temperature"] = Measurement(
+        21, "°C", datetime.now(timezone.utc), "sensor.test", True, stale=True
+    )
+    result = recommend(room, sample_outdoor(),
+                       {"available": True, "condition": "sunny", "attributes": {}})
+    assert result["state"] == "insufficient_data"
+    assert "room_temperature" in result["missing"]
+
+
+def test_stale_co2_is_not_used_as_a_trigger():
+    room = sample_room(co2=1500)
+    room["co2"] = Measurement(
+        1500, "ppm", datetime.now(timezone.utc), "sensor.test", True, stale=True
+    )
+    result = recommend(room, sample_outdoor(),
+                       {"available": True, "condition": "sunny", "attributes": {}})
+    assert result["state"] == "no_action"
+    assert result["confidence"] == "low"
+
+
+def test_implausible_humidity_blocks_recommendation():
+    room = sample_room(co2=1400)
+    room["humidity"] = measurement(140)
+    result = recommend(room, sample_outdoor(),
+                       {"available": True, "condition": "sunny", "attributes": {}})
+    assert result["state"] == "insufficient_data"
