@@ -72,8 +72,10 @@ def assess_forecast(
         if (is_night and now <= when <= now + timedelta(hours=12)
                 and indoor_temperature is not None and temp is not None
                 and temp <= indoor_temperature - 2
+                and (probability is not None or precipitation is not None)
                 and (probability is None or probability < 40)
                 and (precipitation is None or precipitation < 0.2)
+                and (gust is not None or wind is not None)
                 and (gust is None or gust <= 50)
                 and (wind is None or wind <= 35)):
             night_candidates.append(when)
