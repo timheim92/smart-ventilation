@@ -4,6 +4,8 @@ from __future__ import annotations
 import math
 from datetime import datetime
 
+from .forecast import assess_forecast
+
 from .calculations import absolute_humidity_g_m3, dew_point_c, estimate_ventilation_minutes
 from .facade import facade_exposure
 from .seasonal import thermal_guidance
@@ -46,6 +48,7 @@ def recommend(room: dict, outdoor: dict, weather: dict, now: datetime | None = N
     thermal = thermal_guidance(float(t.value), float(ot.value),
                                (now or datetime.now()).month, attrs.get("solar_irradiance"))
     facade = facade_exposure(room.get("orientation"), attrs.get("wind_bearing"))
+    forecast = assess_forecast(weather.get("forecast"), now or datetime.now().astimezone(), float(t.value))
     co2_valid = _valid_measurement(co2, 250, 10000)
     triggers = []
     if co2_valid and float(co2.value) >= 1000:
@@ -61,13 +64,15 @@ def recommend(room: dict, outdoor: dict, weather: dict, now: datetime | None = N
         "facade_exposure": facade["exposure"],
         "facade_confidence": facade["confidence"],
         "forecast_available": weather.get("forecast_available", False),
+        "forecast_advice": forecast["advice"],
+        "night_cooling_window": forecast["night_cooling_window"],
         "missing": [],
     }
     if not triggers:
         return {
             **common, "state": "no_action", "method": "none", "duration": 0,
             "reason": "Aktuell kein dringender Lüftungsbedarf anhand verfügbarer Messwerte. "
-                      + thermal["advice"],
+                      + thermal["advice"] + " " + forecast["advice"],
             "confidence": "medium" if co2_valid else "low",
         }
 
@@ -76,6 +81,13 @@ def recommend(room: dict, outdoor: dict, weather: dict, now: datetime | None = N
         return {
             **common, "state": "caution", "method": "none", "duration": None,
             "reason": reason + "Außenluft enthält deutlich mehr Wasser; Feuchteeintrag möglich.",
+            "confidence": "medium",
+        }
+
+    if forecast["imminent_rain"] or forecast["high_wind"]:
+        return {
+            **common, "state": "caution", "method": "none", "duration": None,
+            "reason": reason + forecast["advice"] + " Fenster nicht unbeaufsichtigt öffnen.",
             "confidence": "medium",
         }
 
