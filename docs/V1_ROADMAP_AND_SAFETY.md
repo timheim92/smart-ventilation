@@ -4,7 +4,7 @@
 
 1. Stability: CI and unit tests, numeric validation, stale-data detection and fail-safe missing-data behavior.
 2. Recommendations: room CO₂/humidity demand, absolute humidity, dew point, seasonal thermal guidance and confidence labels.
-3. Weather: current conditions and optional hourly forecast through Home Assistant's weather service. The adapter is isolated for future Open-Meteo/Ecowitt providers.
+3. Weather: current conditions and optional hourly forecast through Home Assistant's weather service. The next 3 hours are checked for forecast rain (precipitation probability ≥60% or precipitation ≥0.2) and strong wind/gusts. A night-cooling opportunity is exposed when a forecast night hour within 12 hours is at least 2 °C cooler indoors and has explicit low-rain and wind data. This is advisory, not an unattended-open command. The adapter is isolated for future Open-Meteo/Ecowitt providers.
 4. Building/facade: room volume, window metadata, orientation and advisory windward/leeward exposure. This does not calculate air exchange.
 5. Passive learning: calculate observed before/after CO₂ and absolute-humidity changes for manually recorded ventilation events. No automatic training or certified air-change rate.
 6. Actuator safety: fail-closed policy helper. Actual window control is not implemented and remains disabled.
