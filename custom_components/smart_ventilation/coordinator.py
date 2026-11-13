@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta, datetime, timezone
 import logging
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 from .const import DOMAIN, UPDATE_INTERVAL_MINUTES
 from .data_sources.home_assistant import read_measurement
 from .data_sources.weather import async_read_weather
@@ -22,7 +23,7 @@ class SmartVentilationCoordinator(DataUpdateCoordinator[dict]):
         all_measurements = list(outdoor.values())
         for room in rooms:
             all_measurements.extend([room["temperature"], room["humidity"], room["co2"]])
-            room["recommendation"] = recommend(room, outdoor, weather)
+            room["recommendation"] = recommend(room, outdoor, weather, now=dt_util.now())
         return {"rooms": rooms, "outdoor": outdoor, "weather": weather,
                 "weather_entity": options.get("weather_entity"),
                 "available_count": sum(m.available for m in all_measurements),
